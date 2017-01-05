@@ -154,7 +154,7 @@ public class Bmp180 implements AutoCloseable {
 
     private int readRawTemp() throws IOException {
         // Reads the raw (uncompensated) temperature from the sensor
-        if (System.currentTimeMillis() - rawTempTime < 34) {
+        if (System.currentTimeMillis() - rawTempTime < 50) {
             return rawTempVal;
         }
 
@@ -171,7 +171,7 @@ public class Bmp180 implements AutoCloseable {
 
     private int readRawPressure() throws IOException {
 
-        if (System.currentTimeMillis() - rawPressureTime < 34) {
+        if (System.currentTimeMillis() - rawPressureTime < 50) {
             return rawPresureVal;
         }
 
@@ -201,7 +201,7 @@ public class Bmp180 implements AutoCloseable {
 
     public synchronized float readTemperature() throws IOException {
 
-        if (System.currentTimeMillis() - temperatureTime < 34) {
+        if (System.currentTimeMillis() - temperatureTime < 500) {
             return temperatureVal;
         }
         // Gets the compensated temperature in degrees celsius
@@ -227,7 +227,7 @@ public class Bmp180 implements AutoCloseable {
 
     public synchronized int readPressure() throws IOException {
         // Gets the compensated pressure in pascal
-        if (System.currentTimeMillis() - pressureTime < 34) {
+        if (System.currentTimeMillis() - pressureTime < 500) {
             return pressureVal;
         }
 
