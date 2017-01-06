@@ -15,7 +15,7 @@ import com.samgol.driver.bmp180.Bmp180SensorDriver;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class SensorActivity extends Activity implements 1 {
+public class SensorActivity extends Activity implements SensorEventListener {
     public static final String TAG = SensorActivity.class.getSimpleName();
     private static final String I2C_PORT = "I2C1";
 
@@ -46,7 +46,6 @@ public class SensorActivity extends Activity implements 1 {
                                 sensor, SensorManager.SENSOR_DELAY_NORMAL);
                     }
                 }
-
             }
         });
 
@@ -58,7 +57,6 @@ public class SensorActivity extends Activity implements 1 {
         } catch (IOException e) {
             Log.e(TAG, "Error configuring sensor ", e);
         }
-
     }
 
 
@@ -121,8 +119,10 @@ public class SensorActivity extends Activity implements 1 {
             mBmp180.close();
         } catch (IOException e) {
             Log.e(TAG, "closeSensor  error: ", e);
+        } finally {
+            mBmp180 = null;
         }
-        mBmp180 = null;
+
     }
 
 }
