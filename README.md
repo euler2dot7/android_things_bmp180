@@ -44,21 +44,20 @@ Android Things Bosh BMP85/BMP180 Driver Example
 
 ```
 
-### You can use this driver with SensorManager
+### You can also use this driver with SensorManager
 
+Registers the sensor and attach the listener
 ```java
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensorManager.registerDynamicSensorCallback(new SensorManager.DynamicSensorCallback() {
             @Override
             public void onDynamicSensorConnected(Sensor sensor) {
-                if (sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
-                    Log.i(TAG, "Temperature sensor connected");
-                    mSensorManager.registerListener(SensorActivity.this,
-                            sensor, SensorManager.SENSOR_DELAY_NORMAL);
-                } else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
-                    Log.i(TAG, "Pressure sensor connected");
-                    mSensorManager.registerListener(SensorActivity.this,
-                            sensor, SensorManager.SENSOR_DELAY_NORMAL);
+                if (sensor.getType() == Sensor.TYPE_DEVICE_PRIVATE_BASE) {
+                    if (sensor.getStringType().equalsIgnoreCase(Bmp180SensorDriver.BAROMETER_SENSOR)) {
+                        Log.i(TAG, "Barometer sensor connected");
+                        mSensorManager.registerListener(mListener,
+                                sensor, SensorManager.SENSOR_DELAY_NORMAL);
+                    }
                 }
             }
 	});
@@ -66,8 +65,7 @@ Android Things Bosh BMP85/BMP180 Driver Example
 
         try {
             mSensorDriver = new Bmp180SensorDriver(I2C_PORT);
-            mSensorDriver.registerTemperatureSensor();
-            mSensorDriver.registerPressureSensor();
+            mSensorDriver.registerBarometerSensor();
         } catch (IOException e) {
             Log.e(TAG, "Error configuring sensor ", e);
 	}
@@ -75,10 +73,14 @@ Android Things Bosh BMP85/BMP180 Driver Example
 
 ```
 
+Receives data through SensorEventListener
 ```java
    @Override
     public void onSensorChanged(SensorEvent event) {
-        Log.i(TAG, "sensor changed: " + event.values[0]);
+       float data[] = Arrays.copyOf(event.values, 3);
+       Log.i(TAG, "Pressure: " + data[0]);
+       Log.i(TAG, "Temperature: " + data[1]);
+       Log.i(TAG, "Altitude: " + (Math.round(data[2] * 10) / 10.0F));
     }
 
     @Override
@@ -89,6 +91,6 @@ Android Things Bosh BMP85/BMP180 Driver Example
 
 ### Live photo
 
-![Alt text](/img/foto.jpg?raw=true "foto")
+![Alt text](/img/foto.jpg?raw=true "photo")
 
 

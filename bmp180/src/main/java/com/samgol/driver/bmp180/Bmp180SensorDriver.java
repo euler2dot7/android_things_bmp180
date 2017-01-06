@@ -7,7 +7,6 @@ import com.google.android.things.userdriver.UserDriverManager;
 import com.google.android.things.userdriver.UserSensor;
 import com.google.android.things.userdriver.UserSensorDriver;
 import com.google.android.things.userdriver.UserSensorReading;
-import com.samgol.driver.bmp180.Bmp180;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -15,7 +14,7 @@ import java.util.UUID;
 
 public class Bmp180SensorDriver implements AutoCloseable {
     private static final String TAG = "Bmp180SensorDriver";
-
+    public static final String BAROMETER_SENSOR = "com.samgol.barometer";
     // DRIVER parameters
     // documented at https://source.android.com/devices/sensors/hal-interface.html#sensor_t
     private static final String DRIVER_VENDOR = "Bosch";
@@ -27,6 +26,7 @@ public class Bmp180SensorDriver implements AutoCloseable {
 
     private TemperatureUserDriver mTemperatureUserDriver;
     private PressureUserDriver mPressureUserDriver;
+    private BarometerUserDriver mBarometerUserDriver;
 
     /**
      * Create a new framework sensor driver connected on the given bus.
@@ -51,12 +51,29 @@ public class Bmp180SensorDriver implements AutoCloseable {
     public void close() throws IOException {
         unregisterTemperatureSensor();
         unregisterPressureSensor();
+        unregisterBarometerSensor();
         if (mDevice != null) {
             try {
                 mDevice.close();
             } finally {
                 mDevice = null;
             }
+        }
+    }
+
+    /**
+     * Register a {@link UserSensor} that pipes temperature readings into the Android SensorManager.
+     *
+     * @see #unregisterBarometerSensor() ()
+     */
+    public void registerBarometerSensor() {
+        if (mDevice == null) {
+            throw new IllegalStateException("cannot register closed driver");
+        }
+
+        if (mBarometerUserDriver == null) {
+            mBarometerUserDriver = new BarometerUserDriver();
+            UserDriverManager.getManager().registerSensor(mBarometerUserDriver.getUserSensor());
         }
     }
 
@@ -112,6 +129,16 @@ public class Bmp180SensorDriver implements AutoCloseable {
         }
     }
 
+    /**
+     * Unregister the barometer {@link UserSensor}.
+     */
+    public void unregisterBarometerSensor() {
+        if (mBarometerUserDriver != null) {
+            UserDriverManager.getManager().unregisterSensor(mBarometerUserDriver.getUserSensor());
+            mBarometerUserDriver = null;
+        }
+    }
+
 
     private class PressureUserDriver extends UserSensorDriver {
         // DRIVER parameters
@@ -163,6 +190,50 @@ public class Bmp180SensorDriver implements AutoCloseable {
 
     }
 
+
+    private class BarometerUserDriver extends UserSensorDriver {
+        private static final float DRIVER_RESOLUTION = 0.005f;
+        private static final float DRIVER_POWER = Bmp180.MAX_POWER_CONSUMPTION_TEMP_UA / 1000.f;
+        private static final int DRIVER_VERSION = 1;
+        private static final String DRIVER_REQUIRED_PERMISSION = "";
+        private boolean mEnabled;
+        private UserSensor mUserSensor;
+
+        private UserSensor getUserSensor() {
+            if (mUserSensor == null) {
+                mUserSensor = UserSensor.builder()
+                        .setCustomType(Sensor.TYPE_DEVICE_PRIVATE_BASE,
+                                BAROMETER_SENSOR,
+                                Sensor.REPORTING_MODE_CONTINUOUS)
+                        .setName(DRIVER_NAME)
+                        .setVendor(DRIVER_VENDOR)
+                        .setVersion(DRIVER_VERSION)
+                        .setResolution(DRIVER_RESOLUTION)
+                        .setPower(DRIVER_POWER)
+                        .setRequiredPermission(DRIVER_REQUIRED_PERMISSION)
+                        .setUuid(UUID.randomUUID())
+                        .setDriver(this)
+                        .build();
+            }
+            return mUserSensor;
+        }
+
+        @Override
+        public UserSensorReading read() throws IOException {
+            return new UserSensorReading(mDevice.readAllValues());
+        }
+
+        @Override
+        public void setEnabled(boolean enabled) throws IOException {
+            Log.d(TAG, "setEnabled() called with: enabled = [" + enabled + "]");
+            mEnabled = enabled;
+        }
+
+        private boolean isEnabled() {
+            return mEnabled;
+        }
+
+    }
 
     private class TemperatureUserDriver extends UserSensorDriver {
         // DRIVER parameters
