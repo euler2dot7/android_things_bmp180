@@ -87,7 +87,7 @@ Android Things Bosh BMP85/BMP180 Driver Example
     }
 ```
 
-### Live foto
+### Live photo
 
 ![Alt text](/img/foto.jpg?raw=true "foto")
 
