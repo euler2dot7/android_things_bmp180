@@ -97,12 +97,22 @@ public class Bmp180 implements AutoCloseable {
             try {
                 this.readCalibrationData();
             } catch (Exception e) {
-                Log.e(TAG, "Bmp180: ", e);
+                Log.e(TAG, "Bmp180 Error: ", e);
             }
         } catch (IOException e) {
-            Log.e(TAG, "Bmp180: ", e);
+            Log.e(TAG, "Bmp180 Error: ", e);
         }
     }
+
+    public Bmp180(I2cDevice i2cDevice) {
+        mDevice = i2cDevice;
+        try {
+            this.readCalibrationData();
+        } catch (Exception e) {
+            Log.e(TAG, "Bmp180 Error: ", e);
+        }
+    }
+
 
     public void setMode(@Mode int mode) {
         this.mode = mode;
@@ -197,7 +207,7 @@ public class Bmp180 implements AutoCloseable {
     }
 
     private float temperatureVal;
-    private long temperatureTime ;
+    private long temperatureTime;
 
     public synchronized float readTemperature() throws IOException {
 
