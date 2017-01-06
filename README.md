@@ -14,65 +14,38 @@ Android Things Bosh BMP85/BMP180 Driver Example
 ### One  can use the sensor directly without SensorManager
 
 ```java
-class Bmp180Polling {
-    private HandlerThread mHandlerThread;
-    private Handler mBgHandler;
+
     private Bmp180 mBmp180;
-    private boolean poll = true;
-
-    Bmp180Polling() {
-        mBmp180 = new Bmp180("I2C1");
-        mHandlerThread = new HandlerThread("mBmp180");
-        mHandlerThread.start();
-        mBgHandler = new Handler(mHandlerThread.getLooper());
-        mBgHandler.post(mSensorLoop);
+    private static final String I2C_BUS = "I2C1";
+    
+    private void initSensor(){
+        mBmp180 = new Bmp180(I2C_BUS);
     }
 
-
-    void end() {
-        poll = false;
-        if (mBgHandler != null) {
-            mBgHandler.removeCallbacks(mSensorLoop);
-            mHandlerThread.quitSafely();
-        }
-
-        if (mBmp180 != null) {
-            try {
-                mBmp180.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            mBmp180 = null;
+    private void readData(){
+        try {
+            float temp = mBmp180.readTemperature();
+            float press = mBmp180.readPressure();
+            double alt = mBmp180.readAltitude();
+            Log.d(TAG, "loop: temp " + temp + " alt: " + alt + " press: " + press);
+        } catch (IOException e) {
+            Log.e(TAG, "Sensor loop  error : ", e);
         }
     }
 
-    private Runnable mSensorLoop = new Runnable() {
-        @Override
-        public void run() {
-            while (poll) {
-                if (mBmp180 != null) {
-                    try {
-                        float temp = mBmp180.readTemperature();
-                        float press = mBmp180.readPressure();
-                        double alt = mBmp180.readAltitude();
-                        Log.d(TAG, "loop: temp " + temp + " alt: " + alt + " press: " + press);
-                    } catch (IOException e) {
-                        Log.e(TAG, "Sensor loop  error : ", e);
-                    }
-                }
-
-                try {
-                    TimeUnit.MILLISECONDS.sleep(1000);
-                } catch (InterruptedException e) {
-                    Log.e(TAG, "Interrupted : ", e);
-                }
-            }
+    private void closeSensor(){
+        try {
+            mBmp180.close();
+        } catch (IOException e) {
+            Log.e(TAG, "closeSensor  error: ", e);
         }
-    };
-}
+        mBmp180 = null;
+    }
+
 ```
 
 ### You can use this driver with SensorManager
+
 ```java
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensorManager.registerDynamicSensorCallback(new SensorManager.DynamicSensorCallback() {

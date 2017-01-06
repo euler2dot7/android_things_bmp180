@@ -24,7 +24,7 @@ public class Bmp180 implements AutoCloseable {
     // You can use the datasheet values to test the conversion results
     // boolean DEBUG_VALUES = true;
     private static final boolean DEBUG_VALUES = false;
-
+    private static final int MIN_PERIOD_US = 50;
     public final static int BMP180_ADDRESS = 0x77;
 
     @Retention(SOURCE)
@@ -154,7 +154,7 @@ public class Bmp180 implements AutoCloseable {
 
     private int readRawTemp() throws IOException {
         // Reads the raw (uncompensated) temperature from the sensor
-        if (System.currentTimeMillis() - rawTempTime < 50) {
+        if (System.currentTimeMillis() - rawTempTime < MIN_PERIOD_US) {
             return rawTempVal;
         }
 
@@ -171,7 +171,7 @@ public class Bmp180 implements AutoCloseable {
 
     private int readRawPressure() throws IOException {
 
-        if (System.currentTimeMillis() - rawPressureTime < 50) {
+        if (System.currentTimeMillis() - rawPressureTime < MIN_PERIOD_US) {
             return rawPresureVal;
         }
 
@@ -201,7 +201,7 @@ public class Bmp180 implements AutoCloseable {
 
     public synchronized float readTemperature() throws IOException {
 
-        if (System.currentTimeMillis() - temperatureTime < 500) {
+        if (System.currentTimeMillis() - temperatureTime < MIN_PERIOD_US) {
             return temperatureVal;
         }
         // Gets the compensated temperature in degrees celsius
@@ -227,7 +227,7 @@ public class Bmp180 implements AutoCloseable {
 
     public synchronized int readPressure() throws IOException {
         // Gets the compensated pressure in pascal
-        if (System.currentTimeMillis() - pressureTime < 500) {
+        if (System.currentTimeMillis() - pressureTime < MIN_PERIOD_US) {
             return pressureVal;
         }
 
